@@ -100,7 +100,7 @@ function AbcInteraction({ value, setValue, revealed }: { value: AbcLabel[]; setV
 
 function CompletedAbc() { return <section className="abc-complete" aria-label="Completed ABC sequence"><h4>Completed ABC sequence</h4>{abcLabels.map((label, i) => <div key={label}><span>{label[0]}</span><p><b>{label}</b>{abcEvents[i]}</p></div>)}</section> }
 
-const levelWords = ['Beginning the move', 'Practiced', 'Clearly demonstrated']
+const levelWords = ['Keep Exploring', 'Practiced Here', 'Strong Move']
 function Results({ levels, answers, download, restart }: { levels: number[]; answers: Answers; download: () => void; restart: () => void }) {
   const names = ['Notice Clearly','Organize the Pattern','Stay Curious','Ask Before Solving']
   const curiousChoices = Array.isArray(answers['4']) ? answers['4'] as string[] : []
