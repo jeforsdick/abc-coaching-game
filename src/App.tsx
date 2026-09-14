@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowRight, Check, ChevronLeft, Download, Eye, MessageCircleQuestion, RefreshCw } from 'lucide-react'
+import { ArrowRight, Check, ChevronLeft, Download, Ear, Eye, HeartHandshake, MessageCircleQuestion, RefreshCw, Search, Sparkles } from 'lucide-react'
 import { jsPDF } from 'jspdf'
 
 type AbcLabel = '' | 'Antecedent' | 'Behavior' | 'Consequence'
 type Answer = string | string[]
 type Answers = Record<string, Answer>
 type Screen = 'welcome' | 'game' | 'results'
-type Step = { eyebrow: string; title: string; prompt: string; type: 'single' | 'abc' | 'multi'; options?: string[]; correct?: string; feedback: string }
+type CoachingConnection = { technique: string; text: string }
+type Step = { eyebrow: string; title: string; prompt: string; type: 'single' | 'abc' | 'multi'; options?: string[]; correct?: string; feedback: string; coachingConnection: CoachingConnection }
 
 const abcEvents = [
   'The teacher gives the class an independent writing assignment.',
@@ -26,12 +27,16 @@ function MountainScene({ stage = 1, full = false }: { stage?: number; full?: boo
 }
 
 const steps: Step[] = [
-  { eyebrow: '01 · SEE IT', title: 'Start with what we can see and hear', prompt: 'Which statement gives us the most useful description of what we can actually observe?', type: 'single', options: ['“The student is defiant.”', '“The student refuses to work.”', '“When independent writing begins, the student says ‘I’m not doing this,’ pushes the paper away, and puts their head down.”', '“The student just wants attention.”'], correct: '“When independent writing begins, the student says ‘I’m not doing this,’ pushes the paper away, and puts their head down.”', feedback: 'Move from “the student is…” toward “the student does…” Observable words give us a shared starting point.' },
-  { eyebrow: '02 · SORT IT', title: 'Organize the pattern with ABC', prompt: 'For each event, identify its place in the ABC sequence.', type: 'abc', feedback: 'ABC organizes what happened—not why. Seeing the sequence gives us useful questions to explore next.' },
-  { eyebrow: '03 · THINK FUNCTIONALLY', title: 'Hold a working hypothesis lightly', prompt: 'Based on what we know so far, what might the behavior be helping the student get, avoid, or change?', type: 'single', options: ['Avoid or delay the writing task', 'Get adult attention', 'Access something preferred', 'We need more information before deciding'], correct: 'We need more information before deciding', feedback: 'Both task delay and adult support are plausible. Function is a working hypothesis—not a label—and we need patterns across more than one moment.' },
-  { eyebrow: '04 · COACH IT', title: 'Ask before solving', prompt: 'What would be the most useful question to ask the teacher next?', type: 'single', options: ['“Have you tried a reward chart?”', '“When does this usually happen, and when is Eli more successful?”', '“Why do you think he is doing this?”', '“Have you called home?”'], correct: '“When does this usually happen, and when is Eli more successful?”', feedback: 'That question invites partnership and comparison. It gathers information before recommending a strategy.' },
-  { eyebrow: '05 · STAY CURIOUS', title: 'Build a fuller picture', prompt: 'If you could ask three questions first, which would you prioritize?', type: 'multi', options: ['When does the behavior happen?', 'When does it not happen?', 'What usually happens immediately before?', 'What usually happens after?', 'What does success look like?', 'What has already been tried?'], feedback: 'There is no single right set of three. Useful coaching questions help us understand context, comparison, patterns, and previous supports before recommending a strategy.' },
+  { eyebrow: '01 · SEE IT', title: 'Start with what we can see and hear', prompt: 'Which statement gives us the most useful description of what we can actually observe?', type: 'single', options: ['“The student is defiant.”', '“The student refuses to work.”', '“When independent writing begins, the student says ‘I’m not doing this,’ pushes the paper away, and puts their head down.”', '“The student just wants attention.”'], correct: '“When independent writing begins, the student says ‘I’m not doing this,’ pushes the paper away, and puts their head down.”', feedback: 'Move from “the student is…” toward “the student does…” Observable words give us a shared starting point.', coachingConnection: { technique: 'Understanding', text: 'Observation helps us establish the teacher’s and student’s current reality before we problem-solve.' } },
+  { eyebrow: '02 · SORT IT', title: 'Organize the pattern with ABC', prompt: 'For each event, identify its place in the ABC sequence.', type: 'abc', feedback: 'ABC organizes what happened—not why. Seeing the sequence gives us useful questions to explore next.', coachingConnection: { technique: 'Understanding', text: 'ABC information helps us organize evidence instead of relying on assumptions.' } },
+  { eyebrow: '03 · THINK FUNCTIONALLY', title: 'Hold a working hypothesis lightly', prompt: 'Based on what we know so far, what might the behavior be helping the student get, avoid, or change?', type: 'single', options: ['Avoid or delay the writing task', 'Get adult attention', 'Access something preferred', 'We need more information before deciding'], correct: 'We need more information before deciding', feedback: 'Both task delay and adult support are plausible. Function is a working hypothesis—not a label—and we need patterns across more than one moment.', coachingConnection: { technique: 'Questioning', text: 'Root cause analysis means staying curious about the pattern rather than deciding why after one example.' } },
+  { eyebrow: '04 · COACH IT', title: 'Ask before solving', prompt: 'What would be the most useful question to ask the teacher next?', type: 'single', options: ['“Have you tried a reward chart?”', '“When does this usually happen, and when is Eli more successful?”', '“Why do you think he is doing this?”', '“Have you called home?”'], correct: '“When does this usually happen, and when is Eli more successful?”', feedback: 'That question invites partnership and comparison. It gathers information before recommending a strategy.', coachingConnection: { technique: 'Listening + Questioning', text: '80/20 listening and open-ended questions help the teacher think with us instead of simply receiving a strategy.' } },
+  { eyebrow: '05 · STAY CURIOUS', title: 'Build a fuller picture', prompt: 'If you could ask three questions first, which would you prioritize?', type: 'multi', options: ['When does the behavior happen?', 'When does it not happen?', 'What usually happens immediately before?', 'What usually happens after?', 'What does success look like?', 'What has already been tried?'], feedback: 'There is no single right set of three. Useful coaching questions help us understand context, comparison, patterns, and previous supports before recommending a strategy.', coachingConnection: { technique: 'Professional Relationship of Trust + Listening + Understanding', text: 'Positive regard, active listening, and curiosity help us understand current reality before recommending change.' } },
 ]
+
+function CoachingConnectionCard({ connection }: { connection: CoachingConnection }) {
+  return <aside className="coaching-connection" aria-label={`Coaching connection: ${connection.technique}`}><Sparkles size={18}/><div><span>Coaching Connection</span><p><strong>{connection.technique}:</strong> {connection.text}</p></div></aside>
+}
 
 const loadAnswers = (): Answers => { try { return JSON.parse(sessionStorage.getItem('behavior-coach-answers') || '{}') } catch { return {} } }
 const initialDraft = (type: Step['type']): Answer => type === 'abc' ? ['', '', ''] as AbcLabel[] : type === 'multi' ? [] : ''
@@ -75,7 +80,7 @@ function App() {
 
   return <div className="app-shell">
     <header className="site-header"><div className="brand-mark" aria-hidden="true"><Eye size={22}/></div><div><b>Behavior Basics</b><span>Granite School District</span></div></header>
-    {screen === 'welcome' && <main className="welcome page screen-enter"><div className="welcome-title"><p className="eyebrow">A 5–8 MINUTE LEARNING EXPERIENCE</p><h1>See It, Sort It,<br/><em>Coach It.</em></h1><MountainScene /></div><p className="subtitle">A quick behavior lens for instructional coaches</p><div className="welcome-card"><p>You already know how to listen, notice patterns, and ask thoughtful questions. This activity adds a simple behavior lens to those strengths.</p><p><strong>The goal isn’t to diagnose a student or become a behavior specialist.</strong> It’s to slow down, describe what’s observable, organize information, and stay curious before jumping to a solution.</p></div><button className="primary" onClick={() => navigate('game')}>Start the Scenario <ArrowRight size={19}/></button><p className="privacy">No login · Answers stay in this browser session</p></main>}
+    {screen === 'welcome' && <main className="welcome page screen-enter"><div className="welcome-title"><p className="eyebrow">A 5–8 MINUTE APPLICATION ACTIVITY</p><h1>See It, Sort It,<br/><em>Coach It.</em></h1><MountainScene /></div><p className="subtitle">Apply the behavior content through the coaching skills you already have</p><div className="lens-line" aria-label="Behavior lens plus coaching lens"><span>Behavior Lens</span><b>+</b><span>Coaching Lens</span></div><div className="welcome-card"><p>You’ve learned the pieces: <strong>get specific, use the ABCs, and think functionally.</strong> Now put them together using coaching skills you already have.</p><p>You are not learning a new coaching model. Practice applying Granite’s existing coaching techniques when the concern is behavior.</p></div><button className="primary" onClick={() => navigate('game')}>Start the Scenario <ArrowRight size={19}/></button><p className="privacy">No login · Answers stay in this browser session</p></main>}
     {screen === 'game' && <main className="page game screen-enter" key={index}>
       <div className="progress-row"><span>Scenario: Independent Writing</span><span>{index + 1} of {steps.length}</span></div><div className="progress"><i style={{ width: `${((index + 1) / steps.length) * 100}%` }}/></div>
       <div className="ridge-progress" aria-label={`Learning journey, step ${index + 1} of ${steps.length}`}><MountainScene stage={index + 1}/><div className="journey-labels">{['See It','Sort It','Think','Coach It','Stay Curious'].map((label,i)=><span className={i <= index ? 'reached' : ''} key={label}>{label}</span>)}</div></div>
@@ -84,7 +89,7 @@ function App() {
         {step.type === 'abc' ? <AbcInteraction value={draft as AbcLabel[]} setValue={setDraft} revealed={revealed}/> : <div className={`options ${step.type}`} role={step.type === 'single' ? 'radiogroup' : 'group'} aria-label={step.prompt}>{step.options?.map(option => { const many = step.type === 'multi'; const selected = many ? Array.isArray(draft) && draft.includes(option) : draft === option; const capped = many && Array.isArray(draft) && draft.length === 3 && !selected
           return <button key={option} disabled={revealed || capped} role={many ? 'checkbox' : 'radio'} aria-checked={selected} className={`option ${selected ? 'selected' : ''}`} onClick={() => setDraft(many ? selected ? (draft as string[]).filter(x => x !== option) : [...(draft as string[]), option] : option)}><span className="select-dot">{selected && <Check size={15}/>}</span><span>{option}</span></button>})}</div>}
         {step.type === 'multi' && !revealed && <p className="selection-count" aria-live="polite">{Array.isArray(draft) ? draft.length : 0} of 3 selected</p>}
-        {revealed && <div className={`feedback ${choiceStrong ? 'good' : ''}`} role="status"><div><MessageCircleQuestion size={22}/></div><p><strong>{choiceStrong ? 'A useful coaching move' : 'Keep the lens curious'}</strong>{step.type === 'abc' && !choiceStrong ? `You identified ${abcAccuracy(draft)} of 3. The completed sequence below shows how each event fits. ` : step.type === 'single' && !choiceStrong ? 'That’s a common place to start. Consider what we can verify or what question would gather more information. ' : ''}{step.feedback}</p></div>}
+        {revealed && <><div className={`feedback ${choiceStrong ? 'good' : ''}`} role="status"><div><MessageCircleQuestion size={22}/></div><p><strong>{choiceStrong ? 'A useful coaching move' : 'Keep the lens curious'}</strong>{step.type === 'abc' && !choiceStrong ? `You identified ${abcAccuracy(draft)} of 3. The completed sequence below shows how each event fits. ` : step.type === 'single' && !choiceStrong ? 'That’s a common place to start. Consider what we can verify or what question would gather more information. ' : ''}{step.feedback}</p></div><CoachingConnectionCard connection={step.coachingConnection}/></>}
         {revealed && step.type === 'abc' && <CompletedAbc />}
         {!revealed ? <button className="primary full" disabled={!canSubmit} onClick={submit}>{step.type === 'abc' ? 'Check the Pattern' : 'See Coaching Feedback'} <ArrowRight size={18}/></button> : <button className="primary full" onClick={next}>{index === steps.length - 1 ? 'View My Snapshot' : 'Continue'} <ArrowRight size={18}/></button>}
       </section>
@@ -103,10 +108,17 @@ function CompletedAbc() { return <section className="abc-complete" aria-label="C
 const levelWords = ['Keep Exploring', 'Practiced Here', 'Strong Move']
 function Results({ levels, answers, download, restart }: { levels: number[]; answers: Answers; download: () => void; restart: () => void }) {
   const names = ['Notice Clearly','Organize the Pattern','Stay Curious','Ask Before Solving']
+  const coachingSkills = [
+    { name: 'Listening', text: 'Slow down and hear the concern before solving it.', icon: Ear },
+    { name: 'Questioning', text: 'Use open-ended questions and root-cause thinking.', icon: MessageCircleQuestion },
+    { name: 'Understanding', text: 'Use observation and evidence to understand current reality.', icon: Search },
+    { name: 'Professional Relationship of Trust', text: 'Stay curious, collaborative, and nonjudgmental.', icon: HeartHandshake },
+  ]
   const curiousChoices = Array.isArray(answers['4']) ? answers['4'] as string[] : []
   const observations = [levels[0] === 3 ? 'You chose observable information before interpreting behavior.' : 'Keep practicing the shift from a description of the student to what someone can see or hear.', levels[2] === 3 ? `You held function as a working hypothesis. Your first questions included ${curiousChoices.length ? curiousChoices.slice(0, 2).join(' and ').toLowerCase() : 'more context'}.` : 'One move to keep practicing: pause at a working hypothesis and gather context before choosing a strategy.', levels[1] === 3 ? 'You accurately organized all three events with the ABC lens.' : `You identified ${levels[1]} of the three ABC events; revisiting what happened immediately before and after can clarify the pattern.`]
   return <main className="page results screen-enter"><div className="result-icon"><Check size={26}/></div><p className="eyebrow">SCENARIO COMPLETE</p><h1>Your Coaching Lens<br/><em>Snapshot</em></h1><p className="result-intro">A snapshot of the moves you practiced in this scenario—not a score of your coaching ability.</p><div className="results-landscape"><MountainScene full/><p>Your behavior coaching view</p></div>
     <section className="snapshot" aria-label="Behavior coaching snapshot">{names.map((name,i)=><div className="bar-row" key={name}><div><b>{name}</b><span>{levelWords[Math.max(0, levels[i] - 1)]}</span></div><div className="bar segments" aria-label={`${name}: ${levelWords[Math.max(0, levels[i] - 1)]}`}>{[1,2,3].map(segment => <i className={segment <= levels[i] ? 'filled' : ''} key={segment}/>)}</div></div>)}</section>
+    <section className="skills-used" aria-labelledby="skills-used-title"><p className="eyebrow" id="skills-used-title">The coaching skills you just used</p><div>{coachingSkills.map(({ name, text, icon: Icon }) => <article key={name}><Icon size={18}/><h2>{name}</h2><p>{text}</p></article>)}</div><strong>Behavior coaching starts with good coaching.</strong></section>
     <section className="takeaways"><h2>What your choices suggest</h2>{observations.map(x=><p key={x}><Check size={17}/><span>{x}</span></p>)}</section><section className="guide-card"><div><Download size={25}/></div><h2>Take the lens with you</h2><p>Your print-ready reference includes practical coaching questions, the ABC lens, and prompts to help you dig deeper.</p><button className="primary full" onClick={download}><Download size={18}/> Download Behavior Coaching Quick Reference</button></section><p className="reminder"><span>NOTICE</span><i>→</i><span>UNDERSTAND</span><i>→</i><span>SUPPORT</span><i>→</i><span>CHECK</span></p><button className="text-button" onClick={restart}><RefreshCw size={16}/> Try it again</button>
   </main>
 }
@@ -163,7 +175,7 @@ function createPdf() {
     mountains()
     doc.setDrawColor(196, 210, 222); doc.line(margin, 728, 570, 728)
     text('NOTICE   >   UNDERSTAND   >   SUPPORT   >   CHECK', margin, 746, 8.5, 'bold', navy)
-    text(`${page} / 2`, 546, 746, 8, 'bold', navy)
+    text(`${page} / 3`, 546, 746, 8, 'bold', navy)
     wrapped('Use this lens to support collaborative problem-solving—not to independently diagnose function or conduct a formal FBA.', margin, 762, 490, 7.5, 'normal', 9)
   }
 
@@ -244,6 +256,27 @@ function createPdf() {
     text(item, x + 9, y, i === 5 || i === 7 ? 7.3 : 7.7, 'normal', [255, 255, 255])
   })
   footer(2)
+
+  // Page 3: a secondary reminder of the Granite techniques that support the questions.
+  doc.addPage()
+  doc.setFillColor(...navy); doc.rect(0, 0, 612, 54, 'F')
+  text('BEHAVIOR COACHING QUICK REFERENCE', margin, 33, 11, 'bold', [255, 255, 255])
+  text('COACHING CONNECTION', 455, 33, 7.5, 'bold', sky)
+  text('Coaching Techniques to Lean On', margin, 91, 17, 'bold', navy)
+  wrapped('Use the coaching skills you already have to stay curious and understand the current reality before recommending change.', margin, 111, contentWidth, 9.2, 'normal', 12)
+  const techniques = [
+    ['LISTENING', 'Listen more than you talk. Stay fully present.'],
+    ['QUESTIONING', 'Ask open-ended questions. Prompt reflection. Explore the root of the concern.'],
+    ['UNDERSTANDING', 'Observe. Look at current reality. Use information before assumptions.'],
+    ['PROFESSIONAL RELATIONSHIP OF TRUST', 'Assume good intentions. Stay collaborative and nonjudgmental.'],
+  ]
+  techniques.forEach((item, i) => {
+    const x = margin + (i % 2) * 270; const y = 148 + Math.floor(i / 2) * 94
+    doc.setFillColor(...pale); doc.roundedRect(x, y, 258, 78, 7, 7, 'F')
+    text(item[0], x + 13, y + 21, item[0].length > 20 ? 7.2 : 8.2, 'bold', royal)
+    wrapped(item[1], x + 13, y + 40, 232, 8.5, 'normal', 11)
+  })
+  footer(3)
   doc.save('behavior-coaching-quick-reference.pdf')
 }
 
