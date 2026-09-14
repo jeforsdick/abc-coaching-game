@@ -107,7 +107,7 @@ function Results({ levels, answers, download, restart }: { levels: number[]; ans
   const observations = [levels[0] === 3 ? 'You chose observable information before interpreting behavior.' : 'Keep practicing the shift from a description of the student to what someone can see or hear.', levels[2] === 3 ? `You held function as a working hypothesis. Your first questions included ${curiousChoices.length ? curiousChoices.slice(0, 2).join(' and ').toLowerCase() : 'more context'}.` : 'One move to keep practicing: pause at a working hypothesis and gather context before choosing a strategy.', levels[1] === 3 ? 'You accurately organized all three events with the ABC lens.' : `You identified ${levels[1]} of the three ABC events; revisiting what happened immediately before and after can clarify the pattern.`]
   return <main className="page results screen-enter"><div className="result-icon"><Check size={26}/></div><p className="eyebrow">SCENARIO COMPLETE</p><h1>Your Coaching Lens<br/><em>Snapshot</em></h1><p className="result-intro">A snapshot of the moves you practiced in this scenario—not a score of your coaching ability.</p><div className="results-landscape"><MountainScene full/><p>Your behavior coaching view</p></div>
     <section className="snapshot" aria-label="Behavior coaching snapshot">{names.map((name,i)=><div className="bar-row" key={name}><div><b>{name}</b><span>{levelWords[Math.max(0, levels[i] - 1)]}</span></div><div className="bar segments" aria-label={`${name}: ${levelWords[Math.max(0, levels[i] - 1)]}`}>{[1,2,3].map(segment => <i className={segment <= levels[i] ? 'filled' : ''} key={segment}/>)}</div></div>)}</section>
-    <section className="takeaways"><h2>What your choices suggest</h2>{observations.map(x=><p key={x}><Check size={17}/><span>{x}</span></p>)}</section><section className="guide-card"><div><Download size={25}/></div><h2>Take the lens with you</h2><p>Your one-page, print-ready reference includes the ABC lens, coaching questions, and your snapshot.</p><button className="primary full" onClick={download}><Download size={18}/> Download My Behavior Basics Quick Guide</button></section><p className="reminder"><span>NOTICE</span><i>→</i><span>UNDERSTAND</span><i>→</i><span>SUPPORT</span><i>→</i><span>CHECK</span></p><button className="text-button" onClick={restart}><RefreshCw size={16}/> Try it again</button>
+    <section className="takeaways"><h2>What your choices suggest</h2>{observations.map(x=><p key={x}><Check size={17}/><span>{x}</span></p>)}</section><section className="guide-card"><div><Download size={25}/></div><h2>Take the lens with you</h2><p>Your print-ready reference includes practical coaching questions, the ABC lens, and prompts to help you dig deeper.</p><button className="primary full" onClick={download}><Download size={18}/> Download Behavior Coaching Quick Reference</button></section><p className="reminder"><span>NOTICE</span><i>→</i><span>UNDERSTAND</span><i>→</i><span>SUPPORT</span><i>→</i><span>CHECK</span></p><button className="text-button" onClick={restart}><RefreshCw size={16}/> Try it again</button>
   </main>
 }
 
@@ -150,7 +150,8 @@ function createPdf() {
     text(title, margin + 36, y, 15, 'bold', navy)
   }
   const callout = (value: string, y: number, strong = false) => {
-    doc.setFillColor(...(strong ? royal : sky)); doc.roundedRect(margin, y, contentWidth, 27, 6, 6, 'F')
+    const fillColor: readonly [number, number, number] = strong ? royal : sky
+    doc.setFillColor(...fillColor); doc.roundedRect(margin, y, contentWidth, 27, 6, 6, 'F')
     text(value, margin + 13, y + 17, 9.3, 'bold', strong ? [255, 255, 255] : navy)
   }
   const mountains = () => {
@@ -194,7 +195,8 @@ function createPdf() {
   ]
   abc.forEach((item, i) => {
     const x = margin + i * 180
-    doc.setFillColor(...(i === 1 ? royal : navy)); doc.roundedRect(x, 426, 168, 65, 7, 7, 'F')
+    const fillColor: readonly [number, number, number] = i === 1 ? royal : navy
+    doc.setFillColor(...fillColor); doc.roundedRect(x, 426, 168, 65, 7, 7, 'F')
     text(item[0], x + 11, 449, 18, 'bold', [255, 255, 255]); text(item[1], x + 37, 444, 7.5, 'bold', sky)
     wrapped(item[2], x + 37, 458, 119, 8.2, 'normal', 10, [255, 255, 255])
   })
