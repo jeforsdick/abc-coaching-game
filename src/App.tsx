@@ -89,7 +89,7 @@ function App() {
         {!revealed ? <button className="primary full" disabled={!canSubmit} onClick={submit}>{step.type === 'abc' ? 'Check the Pattern' : 'See Coaching Feedback'} <ArrowRight size={18}/></button> : <button className="primary full" onClick={next}>{index === steps.length - 1 ? 'View My Snapshot' : 'Continue'} <ArrowRight size={18}/></button>}
       </section>
     </main>}
-    {screen === 'results' && <Results levels={snapshot} answers={answers} download={() => createPdf(snapshot)} restart={restart}/>}<footer>Created for curious, collaborative coaching.</footer>
+    {screen === 'results' && <Results levels={snapshot} answers={answers} download={createPdf} restart={restart}/>}<footer>Created for curious, collaborative coaching.</footer>
   </div>
 }
 
@@ -111,15 +111,138 @@ function Results({ levels, answers, download, restart }: { levels: number[]; ans
   </main>
 }
 
-function createPdf(levels: number[]) {
-  const doc = new jsPDF({ unit: 'pt', format: 'letter' }); const blue=[18,63,112] as const, teal=[18,137,139] as const; const margin=48
-  doc.setFillColor(...blue); doc.rect(0,0,612,112,'F'); doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(22); doc.text('Behavior Basics Quick Guide',margin,49); doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.text('A practical behavior lens for instructional coaches',margin,70); doc.text('GRANITE SCHOOL DISTRICT',margin,94)
-  doc.setTextColor(...blue); let y=145
-  const section=(num:string,title:string,lines:string[])=>{ doc.setFillColor(228,242,245); doc.roundedRect(margin,y-16,25,25,6,6,'F'); doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text(num,margin+9,y+1); doc.setFontSize(14); doc.text(title,margin+37,y); doc.setFont('helvetica','normal'); doc.setTextColor(48,65,82); doc.setFontSize(10.5); lines.forEach((line,i)=>doc.text(line,margin+37,y+19+i*15)); y += 26+lines.length*15; doc.setTextColor(...blue) }
-  section('1','Describe, Don’t Label',['Move from “The student is…” to “The student does…”']); section('2','Use the ABC Lens',['Antecedent — What happened right before?','Behavior — What did the student do?','Consequence — What happened right after?']); section('3','Think Functionally',['What might the behavior help the student get, avoid, or change?','Function is a working hypothesis—not a label. Ask what else we need to know.']); section('4','Ask Before Solving',['When does this usually happen—and when does it not?','What happens right before and right after?','When is the student more successful? What has already been tried?'])
-  doc.setFillColor(245,248,251); doc.roundedRect(margin,y-13,516,122,10,10,'F'); doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(...blue); doc.text('YOUR COACHING LENS SNAPSHOT',margin+16,y+10); doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.text('Moves practiced in this scenario—not a score of coaching ability.',margin+16,y+24); const names=['Notice Clearly','Organize the Pattern','Stay Curious','Ask Before Solving']; names.forEach((n,i)=>{ const yy=y+46+i*16; doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.text(n,margin+16,yy); [0,1,2].forEach(s=>{ const fillColor: readonly [number, number, number] = s < levels[i] ? teal : [218,226,235]; doc.setFillColor(...fillColor); doc.roundedRect(margin+143+s*111,yy-7,101,7,3,3,'F') }) }); y+=138
-  doc.setFillColor(...teal); doc.roundedRect(margin,y-12,516,43,8,8,'F'); doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.text('COACHING REMINDER',margin+16,y+6); doc.setFontSize(13); doc.text('Notice  >  Understand  >  Support  >  Check',margin+158,y+6)
-  doc.setTextColor(92,106,120); doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.text('Use this lens for collaborative inquiry—not to independently diagnose function or conduct a formal FBA.',margin,714); doc.setFillColor(174,211,231); doc.triangle(0,792,112,745,220,792,'F'); doc.setFillColor(69,132,175); doc.triangle(105,792,294,724,430,792,'F'); doc.setFillColor(...blue); doc.triangle(350,792,492,746,612,792,'F'); doc.save('behavior-basics-quick-guide.pdf')
+function createPdf() {
+  const doc = new jsPDF({ unit: 'pt', format: 'letter' })
+  const navy = [18, 63, 112] as const
+  const royal = [43, 104, 174] as const
+  const sky = [214, 235, 247] as const
+  const pale = [244, 248, 251] as const
+  const slate = [55, 72, 88] as const
+  const margin = 42
+  const contentWidth = 528
+
+  const text = (value: string, x: number, y: number, size = 9.5, style: 'normal' | 'bold' | 'italic' = 'normal', color: readonly [number, number, number] = slate) => {
+    doc.setFont('helvetica', style); doc.setFontSize(size); doc.setTextColor(...color); doc.text(value, x, y)
+  }
+  const wrapped = (value: string, x: number, y: number, width: number, size = 9.5, style: 'normal' | 'bold' | 'italic' = 'normal', leading = 12, color: readonly [number, number, number] = slate) => {
+    const lines = doc.splitTextToSize(value, width) as string[]
+    doc.setLineHeightFactor(leading / size)
+    text(lines.join('\n'), x, y, size, style, color)
+    return y + lines.length * leading
+  }
+  const bullets = (items: string[], x: number, y: number, width: number, size = 8.8, leading = 11.5) => {
+    items.forEach(item => {
+      const lines = doc.splitTextToSize(item, width - 13) as string[]
+      doc.setFillColor(...royal); doc.circle(x + 2.5, y - 3, 1.7, 'F')
+      doc.setLineHeightFactor(leading / size)
+      text(lines.join('\n'), x + 12, y, size)
+      y += lines.length * leading + 2
+    })
+    return y
+  }
+  const questionLabel = (x: number, y: number) => {
+    doc.setFillColor(...sky); doc.roundedRect(x, y - 11, 116, 17, 4, 4, 'F')
+    text('QUESTIONS TO HELP YOU DIG', x + 8, y, 7.2, 'bold', navy)
+  }
+  const sectionTitle = (number: string, title: string, y: number) => {
+    doc.setFillColor(...royal); doc.roundedRect(margin, y - 17, 25, 25, 6, 6, 'F')
+    text(number, margin + 9, y, 11, 'bold', [255, 255, 255])
+    text(title, margin + 36, y, 15, 'bold', navy)
+  }
+  const callout = (value: string, y: number, strong = false) => {
+    doc.setFillColor(...(strong ? royal : sky)); doc.roundedRect(margin, y, contentWidth, 27, 6, 6, 'F')
+    text(value, margin + 13, y + 17, 9.3, 'bold', strong ? [255, 255, 255] : navy)
+  }
+  const mountains = () => {
+    doc.setFillColor(186, 220, 239); doc.triangle(0, 792, 100, 776, 205, 792, 'F')
+    doc.setFillColor(91, 151, 194); doc.triangle(128, 792, 280, 769, 430, 792, 'F')
+    doc.setFillColor(...navy); doc.triangle(365, 792, 490, 774, 612, 792, 'F')
+  }
+  const footer = (page: number) => {
+    mountains()
+    doc.setDrawColor(196, 210, 222); doc.line(margin, 728, 570, 728)
+    text('NOTICE   >   UNDERSTAND   >   SUPPORT   >   CHECK', margin, 746, 8.5, 'bold', navy)
+    text(`${page} / 2`, 546, 746, 8, 'bold', navy)
+    wrapped('Use this lens to support collaborative problem-solving—not to independently diagnose function or conduct a formal FBA.', margin, 762, 490, 7.5, 'normal', 9)
+  }
+
+  // Page 1: observe carefully, then organize and compare what is happening.
+  doc.setFillColor(...navy); doc.rect(0, 0, 612, 116, 'F')
+  doc.setFillColor(...royal); doc.triangle(340, 116, 476, 56, 612, 116, 'F')
+  doc.setFillColor(102, 166, 207); doc.triangle(433, 116, 535, 75, 612, 116, 'F')
+  text('GRANITE SCHOOL DISTRICT', margin, 25, 7.5, 'bold', [186, 220, 239])
+  text('Behavior Coaching Quick Reference', margin, 52, 21, 'bold', [255, 255, 255])
+  text('When a teacher brings you a behavior concern, start here.', margin, 75, 10.5, 'bold', [255, 255, 255])
+  wrapped('You do not need to solve it immediately. Your first job is to slow it down, get specific, and understand the pattern.', margin, 94, 390, 8.5, 'normal', 10, [255, 255, 255])
+
+  sectionTitle('1', 'Get Specific', 145)
+  text('Move from “the student is…” to “the student does…”', margin + 36, 162, 9.5, 'italic', royal)
+  doc.setFillColor(...pale); doc.roundedRect(margin, 174, contentWidth, 52, 7, 7, 'F')
+  text('INSTEAD OF', margin + 13, 188, 7, 'bold', royal); text('“He’s defiant.”', margin + 13, 207, 10.5, 'bold', slate)
+  text('TRY', margin + 147, 188, 7, 'bold', royal)
+  wrapped('“When independent work begins, he says ‘no,’ pushes the paper away, and puts his head down.”', margin + 147, 203, 360, 9.2, 'normal', 11)
+  questionLabel(margin, 247)
+  bullets(['What does it actually look or sound like?', 'What would I see if I were standing in the room?', 'When you say refuses, shuts down, escalates, or is disrespectful, what does the student actually do?', 'How often is it happening?', 'How long does it usually last?'], margin + 2, 267, contentWidth - 4)
+  callout('Coach move: Get clear before you try to fix it.', 340)
+
+  sectionTitle('2', 'Look for the Pattern', 394)
+  text('Use the ABC lens', margin + 36, 411, 9.5, 'italic', royal)
+  const abc = [
+    ['A', 'ANTECEDENT', 'What was happening right before?'],
+    ['B', 'BEHAVIOR', 'What did the student actually do or say?'],
+    ['C', 'CONSEQUENCE', 'What happened right after? What changed?'],
+  ]
+  abc.forEach((item, i) => {
+    const x = margin + i * 180
+    doc.setFillColor(...(i === 1 ? royal : navy)); doc.roundedRect(x, 426, 168, 65, 7, 7, 'F')
+    text(item[0], x + 11, 449, 18, 'bold', [255, 255, 255]); text(item[1], x + 37, 444, 7.5, 'bold', sky)
+    wrapped(item[2], x + 37, 458, 119, 8.2, 'normal', 10, [255, 255, 255])
+  })
+  questionLabel(margin, 516)
+  text('BEFORE', margin + 2, 540, 8, 'bold', navy)
+  bullets(['What was the student being asked to do?', 'Who was there?', 'Was this a transition, difficult task, correction, waiting, or unstructured time?', 'What had been happening earlier?'], margin + 2, 557, 252, 8.2, 10.5)
+  text('AFTER', 318, 540, 8, 'bold', navy)
+  bullets(['What did the adults do?', 'What did peers do?', 'Did the task change, stop, or get easier?', 'Did the student gain attention, help, a break, an item, or something else?', 'What happened next?'], 318, 557, 252, 8.2, 10.5)
+  callout('One ABC is a clue. A repeated pattern is more useful.', 672)
+  footer(1)
+
+  doc.addPage()
+  doc.setFillColor(...navy); doc.rect(0, 0, 612, 54, 'F')
+  text('BEHAVIOR COACHING QUICK REFERENCE', margin, 33, 11, 'bold', [255, 255, 255])
+  text('FROM PATTERN TO A DOABLE NEXT STEP', 393, 33, 7.5, 'bold', sky)
+
+  sectionTitle('3', 'Compare When It Happens — and When It Doesn’t', 86)
+  text('Sometimes the best information comes from the times things are going well.', margin + 36, 103, 9.3, 'italic', royal)
+  bullets(['When is this most likely to happen?', 'When does it almost never happen?', 'What activities or settings are easier for the student?', 'Which adults, classes, or times of day are different?', 'What is different when the student is successful?', 'Has anything recently changed?', 'Are there patterns in task difficulty, attention, transitions, peers, choice, or predictability?'], margin + 2, 125, contentWidth - 4, 8.5, 10.5)
+  callout('Coach move: Look for differences you may actually be able to change.', 218)
+
+  sectionTitle('4', 'Think Functionally', 270)
+  text('What seems to “work” about this behavior for the student?', margin + 36, 287, 9.4, 'italic', royal)
+  text('You are developing a hypothesis, not assigning a label.', margin + 36, 303, 8.7, 'bold', slate)
+  doc.setFillColor(...pale); doc.roundedRect(margin, 315, 254, 91, 7, 7, 'F'); doc.roundedRect(316, 315, 254, 91, 7, 7, 'F')
+  text('DOES SOMETHING GET ADDED?', margin + 12, 333, 8, 'bold', navy)
+  bullets(['Adult attention', 'Peer attention', 'Help or support', 'Access to something preferred'], margin + 12, 350, 226, 8.2, 9.5)
+  text('DOES SOMETHING GO AWAY OR GET DELAYED?', 328, 333, 7.5, 'bold', navy)
+  bullets(['Difficult work', 'A demand', 'A social situation', 'Waiting', 'An uncomfortable situation'], 328, 350, 226, 8.2, 9.5)
+  questionLabel(margin, 427)
+  bullets(['What reliably changes after the behavior?', 'If the behavior stopped working tomorrow, what would the student lose?', 'What could the student do instead that would accomplish the same thing appropriately?'], margin + 2, 448, contentWidth - 4, 8.5, 10.5)
+
+  sectionTitle('5', 'Before You Recommend a Strategy…', 507)
+  const strategyQuestions = ['What has already been tried?', 'How consistently was it used?', 'For how long?', 'What happened when it was used?', 'What does the teacher realistically have the capacity to do?', 'What is one small change we could try first?', 'How will we know if it helped?']
+  bullets(strategyQuestions.slice(0, 4), margin + 2, 529, 250, 8.2, 10)
+  bullets(strategyQuestions.slice(4), 318, 529, 252, 8.2, 10)
+  callout('A strategy should fit the pattern — not just the behavior.', 584, true)
+
+  doc.setFillColor(...navy); doc.roundedRect(margin, 622, contentWidth, 96, 9, 9, 'F')
+  text('QUESTIONS WORTH KEEPING IN YOUR BACK POCKET', margin + 15, 643, 10.5, 'bold', [255, 255, 255])
+  const pocket = ['“Walk me through what usually happens right before.”', '“What happens next?”', '“When is this less likely to happen?”', '“What does it look like when things go well?”', '“What have you already tried?”', '“What do you think the student gets or gets away from when this happens?”', '“What would we rather see the student do instead?”', '“What is one thing we could change that feels doable tomorrow?”']
+  pocket.forEach((item, i) => {
+    const x = margin + 15 + (i % 2) * 255; const y = 660 + Math.floor(i / 2) * 13
+    doc.setFillColor(126, 190, 225); doc.circle(x + 2, y - 2.5, 1.4, 'F')
+    text(item, x + 9, y, i === 5 || i === 7 ? 7.3 : 7.7, 'normal', [255, 255, 255])
+  })
+  footer(2)
+  doc.save('behavior-coaching-quick-reference.pdf')
 }
 
 export default App
