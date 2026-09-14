@@ -7,7 +7,7 @@ A mobile-first behavior-basics learning activity for Granite School District ins
 Requires Node.js 20 or later.
 
 ```bash
-npm ci
+npm install
 npm run dev
 ```
 
@@ -28,4 +28,4 @@ npm run preview
 
 The quick guide PDF is generated entirely in the participant's browser with jsPDF. Session answers are cleared when the browser session ends; participants can also choose **Try it again** on the results screen.
 
-Dependency versions are pinned in `package.json` and `package-lock.json` so local and Vercel builds use the same toolchain.
+Direct dependency versions are pinned in `package.json`.
