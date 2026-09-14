@@ -31,7 +31,7 @@ const steps: Step[] = [
   { eyebrow: '02 · SORT IT', title: 'Organize the pattern with ABC', prompt: 'For each event, identify its place in the ABC sequence.', type: 'abc', feedback: 'ABC organizes what happened—not why. Seeing the sequence gives us useful questions to explore next.', coachingConnection: { technique: 'Understanding', text: 'ABC information helps us organize evidence instead of relying on assumptions.' } },
   { eyebrow: '03 · THINK FUNCTIONALLY', title: 'Hold a working hypothesis lightly', prompt: 'Based on what we know so far, what might the behavior be helping the student get, avoid, or change?', type: 'single', options: ['Avoid or delay the writing task', 'Get adult attention', 'Access something preferred', 'We need more information before deciding'], correct: 'We need more information before deciding', feedback: 'Both task delay and adult support are plausible. Function is a working hypothesis—not a label—and we need patterns across more than one moment.', coachingConnection: { technique: 'Questioning', text: 'Root cause analysis means staying curious about the pattern rather than deciding why after one example.' } },
   { eyebrow: '04 · COACH IT', title: 'Ask before solving', prompt: 'What would be the most useful question to ask the teacher next?', type: 'single', options: ['“Have you tried a reward chart?”', '“When does this usually happen, and when is Eli more successful?”', '“Why do you think he is doing this?”', '“Have you called home?”'], correct: '“When does this usually happen, and when is Eli more successful?”', feedback: 'That question invites partnership and comparison. It gathers information before recommending a strategy.', coachingConnection: { technique: 'Listening + Questioning', text: '80/20 listening and open-ended questions help the teacher think with us instead of simply receiving a strategy.' } },
-  { eyebrow: '05 · STAY CURIOUS', title: 'Build a fuller picture', prompt: 'If you could ask three questions first, which would you prioritize?', type: 'multi', options: ['When does the behavior happen?', 'When does it not happen?', 'What usually happens immediately before?', 'What usually happens after?', 'What does success look like?', 'What has already been tried?'], feedback: 'There is no single right set of three. Useful coaching questions help us understand context, comparison, patterns, and previous supports before recommending a strategy.', coachingConnection: { technique: 'Trust + Listening + Understanding', text: 'Positive regard, active listening, and curiosity help us understand current reality before recommending change.' } },
+  { eyebrow: '05 · STAY CURIOUS', title: 'Build a fuller picture', prompt: 'If you could ask three questions first, which would you prioritize?', type: 'multi', options: ['When does the behavior happen?', 'When does it not happen?', 'What usually happens immediately before?', 'What usually happens after?', 'What does success look like?', 'What has already been tried?'], feedback: 'There is no single right set of three. Useful coaching questions help us understand context, comparison, patterns, and previous supports before recommending a strategy.', coachingConnection: { technique: 'Professional Relationship of Trust + Listening + Understanding', text: 'Positive regard, active listening, and curiosity help us understand current reality before recommending change.' } },
 ]
 
 function CoachingConnectionCard({ connection }: { connection: CoachingConnection }) {
@@ -112,7 +112,7 @@ function Results({ levels, answers, download, restart }: { levels: number[]; ans
     { name: 'Listening', text: 'Slow down and hear the concern before solving it.', icon: Ear },
     { name: 'Questioning', text: 'Use open-ended questions and root-cause thinking.', icon: MessageCircleQuestion },
     { name: 'Understanding', text: 'Use observation and evidence to understand current reality.', icon: Search },
-    { name: 'Trust', text: 'Stay curious, collaborative, and nonjudgmental.', icon: HeartHandshake },
+    { name: 'Professional Relationship of Trust', text: 'Stay curious, collaborative, and nonjudgmental.', icon: HeartHandshake },
   ]
   const curiousChoices = Array.isArray(answers['4']) ? answers['4'] as string[] : []
   const observations = [levels[0] === 3 ? 'You chose observable information before interpreting behavior.' : 'Keep practicing the shift from a description of the student to what someone can see or hear.', levels[2] === 3 ? `You held function as a working hypothesis. Your first questions included ${curiousChoices.length ? curiousChoices.slice(0, 2).join(' and ').toLowerCase() : 'more context'}.` : 'One move to keep practicing: pause at a working hypothesis and gather context before choosing a strategy.', levels[1] === 3 ? 'You accurately organized all three events with the ABC lens.' : `You identified ${levels[1]} of the three ABC events; revisiting what happened immediately before and after can clarify the pattern.`]
@@ -175,7 +175,7 @@ function createPdf() {
     mountains()
     doc.setDrawColor(196, 210, 222); doc.line(margin, 728, 570, 728)
     text('NOTICE   >   UNDERSTAND   >   SUPPORT   >   CHECK', margin, 746, 8.5, 'bold', navy)
-    text(`${page} / 2`, 546, 746, 8, 'bold', navy)
+    text(`${page} / 3`, 546, 746, 8, 'bold', navy)
     wrapped('Use this lens to support collaborative problem-solving—not to independently diagnose function or conduct a formal FBA.', margin, 762, 490, 7.5, 'normal', 9)
   }
 
@@ -247,20 +247,36 @@ function createPdf() {
   bullets(strategyQuestions.slice(4), 318, 529, 252, 8.2, 10)
   callout('A strategy should fit the pattern — not just the behavior.', 584, true)
 
-  doc.setFillColor(...navy); doc.roundedRect(margin, 620, contentWidth, 98, 9, 9, 'F')
-  text('COACHING TECHNIQUES TO LEAN ON', margin + 15, 639, 9.5, 'bold', [255, 255, 255])
+  doc.setFillColor(...navy); doc.roundedRect(margin, 622, contentWidth, 96, 9, 9, 'F')
+  text('QUESTIONS WORTH KEEPING IN YOUR BACK POCKET', margin + 15, 643, 10.5, 'bold', [255, 255, 255])
+  const pocket = ['“Walk me through what usually happens right before.”', '“What happens next?”', '“When is this less likely to happen?”', '“What does it look like when things go well?”', '“What have you already tried?”', '“What do you think the student gets or gets away from when this happens?”', '“What would we rather see the student do instead?”', '“What is one thing we could change that feels doable tomorrow?”']
+  pocket.forEach((item, i) => {
+    const x = margin + 15 + (i % 2) * 255; const y = 660 + Math.floor(i / 2) * 13
+    doc.setFillColor(126, 190, 225); doc.circle(x + 2, y - 2.5, 1.4, 'F')
+    text(item, x + 9, y, i === 5 || i === 7 ? 7.3 : 7.7, 'normal', [255, 255, 255])
+  })
+  footer(2)
+
+  // Page 3: a secondary reminder of the Granite techniques that support the questions.
+  doc.addPage()
+  doc.setFillColor(...navy); doc.rect(0, 0, 612, 54, 'F')
+  text('BEHAVIOR COACHING QUICK REFERENCE', margin, 33, 11, 'bold', [255, 255, 255])
+  text('COACHING CONNECTION', 455, 33, 7.5, 'bold', sky)
+  text('Coaching Techniques to Lean On', margin, 91, 17, 'bold', navy)
+  wrapped('Use the coaching skills you already have to stay curious and understand the current reality before recommending change.', margin, 111, contentWidth, 9.2, 'normal', 12)
   const techniques = [
     ['LISTENING', 'Listen more than you talk. Stay fully present.'],
     ['QUESTIONING', 'Ask open-ended questions. Prompt reflection. Explore the root of the concern.'],
     ['UNDERSTANDING', 'Observe. Look at current reality. Use information before assumptions.'],
-    ['TRUST', 'Assume good intentions. Stay collaborative and nonjudgmental.'],
+    ['PROFESSIONAL RELATIONSHIP OF TRUST', 'Assume good intentions. Stay collaborative and nonjudgmental.'],
   ]
   techniques.forEach((item, i) => {
-    const x = margin + 15 + (i % 2) * 255; const y = 656 + Math.floor(i / 2) * 34
-    text(item[0], x, y, 7.5, 'bold', sky)
-    wrapped(item[1], x, y + 10, 235, 7.2, 'normal', 8.5, [255, 255, 255])
+    const x = margin + (i % 2) * 270; const y = 148 + Math.floor(i / 2) * 94
+    doc.setFillColor(...pale); doc.roundedRect(x, y, 258, 78, 7, 7, 'F')
+    text(item[0], x + 13, y + 21, item[0].length > 20 ? 7.2 : 8.2, 'bold', royal)
+    wrapped(item[1], x + 13, y + 40, 232, 8.5, 'normal', 11)
   })
-  footer(2)
+  footer(3)
   doc.save('behavior-coaching-quick-reference.pdf')
 }
 
